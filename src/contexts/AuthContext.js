@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import firebase from '../firebase/firebaseApp';
 import "firebase/auth";
+import { loginUserHandlerAsync } from '../services/userService';
 const AuthContext = React.createContext();
 
 const provider = new firebase.auth.GoogleAuthProvider();
@@ -29,7 +30,13 @@ class AuthProvider extends Component {
     componentDidMount() {
         const { user, setUser } = this.context;
         firebase.auth().onAuthStateChanged(data => {
-            this.setState({ user: data && data.uid ? getUserObject(data) : {} })
+            if (data && data.uid) {
+                const udata = getUserObject(data);
+                this.setState({ user: udata });
+                loginUserHandlerAsync(data.uid, udata).then(res => console.log('Userdata in db updated', res))
+            } else {
+                this.setState({ user: {} })
+            }
         })
     }
 

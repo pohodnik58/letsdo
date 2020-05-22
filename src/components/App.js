@@ -2,6 +2,7 @@ import React, { useContext } from 'react';
 import './App.css';
 import AuthContext from '../contexts/AuthContext';
 import { dbCreate, dbDelete, dbRead, dbUpdate } from '../services/dbService';
+import UsersList from './UsersList';
 
 const App = () => {
     const { user, loginHandler, logoutHandler } = useContext(AuthContext);
@@ -14,9 +15,11 @@ const App = () => {
                     : <button onClick={logoutHandler}>Выйти</button>
                 }
                 {user.uid && <div>
-                    <img src={user.photoURL} alt="userpic" />
+                    <img src={user.photoURL} alt="userpic" width={50} height={50} />
                     <h3>{user.displayName}</h3>
                     <h5>{user.email}</h5>
+                    <hr />
+                    <UsersList />
                 </div>}
                 <pre>{JSON.stringify(user, null, '\t')}</pre>
         <hr />
