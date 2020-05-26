@@ -11,6 +11,7 @@
     align-items: center;
     justify-content: center;
     user-select: none;
+    color: #888;
 }
 
 .doneBtn {
