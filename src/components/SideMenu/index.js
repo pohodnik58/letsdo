@@ -7,10 +7,12 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import GroupIcon from '@material-ui/icons/Group';
+import ImportExportIcon from '@material-ui/icons/ImportExport';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
 import AuthContext from '../../contexts/AuthContext';
 import Avatar from '@material-ui/core/Avatar';
 import Typography from '@material-ui/core/Typography';
+import { Link } from 'react-router-dom';
 
 const drawerWidth = 240;
 
@@ -55,9 +57,13 @@ const SideMenu = (props) => {
         </div>
         <Divider />
         <List>
-            <ListItem button>
+            <ListItem button component={Link} to="/users" onClick={()=>props.onChangeOpen(false)}>
                 <ListItemIcon><GroupIcon /></ListItemIcon>
-                <ListItemText primary={'ololo'} />
+                <ListItemText primary={'Пользователи'} />
+            </ListItem>
+            <ListItem button  component={Link} to="/pushups" onClick={()=>props.onChangeOpen(false)}>
+                <ListItemIcon><ImportExportIcon /></ListItemIcon>
+                <ListItemText primary={'Отжимания'} />
             </ListItem>
         </List>
     </SwipeableDrawer>;

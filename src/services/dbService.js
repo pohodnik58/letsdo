@@ -20,6 +20,10 @@ export function dbDelete(ref) {
     return firebase.database().ref(ref).remove();
 }
 
+export function dbGetNewKey(ref) {
+    return firebase.database().ref(ref).push().key;
+}
+
 export default {
-    dbCreate, dbRead, dbUpdate, dbDelete
+    dbCreate, dbRead, dbUpdate, dbDelete, dbGetNewKey
 }
