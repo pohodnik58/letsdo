@@ -8,7 +8,7 @@ import { dbGetNewKey, dbRead, dbUpdate } from '../../services/dbService';
 const PushUps = (props) => {
     const [isShowModal, setShowModal] = useState(false);
     const [startTime, setStartTime] = useState(null);
-    const [myPushups, setMyPushups] = useState([]);
+    const [myPushups, setMyPushups] = useState(null);
 
     const { user } = useContext(AuthContext);
     useEffect(()=>{
@@ -47,7 +47,7 @@ const PushUps = (props) => {
         }}/>}
 
         <ul>
-            {Object.values(myPushups).map(x=><li>
+            {myPushups && Object.values(myPushups).map(x=><li>
                 {new Date(x.startTime).toLocaleDateString()}  {new Date(x.startTime).toLocaleTimeString()} - {new Date(x.endTime).toLocaleTimeString()}
                 | <strong>{x.steps.length.toString()}</strong>
             </li>)}
