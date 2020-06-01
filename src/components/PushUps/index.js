@@ -47,7 +47,7 @@ const PushUps = (props) => {
         }}/>}
 
         <ul>
-            {myPushups && Object.values(myPushups).map(x=><li>
+            {myPushups && Object.entries(myPushups).map(([key, x]) => <li key={key}>
                 {new Date(x.startTime).toLocaleDateString()}  {new Date(x.startTime).toLocaleTimeString()} - {new Date(x.endTime).toLocaleTimeString()}
                 | <strong>{x.steps.length.toString()}</strong>
             </li>)}
