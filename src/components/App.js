@@ -6,7 +6,8 @@ import {
 } from "react-router-dom";
 import clsx from 'clsx';
 import { makeStyles, useTheme } from '@material-ui/core/styles';
-import CssBaseline from '@material-ui/core/CssBaseline';
+import { CssBaseline, createMuiTheme } from '@material-ui/core';
+import { ThemeProvider } from "@material-ui/styles";
 
 import './App.css';
 import AuthContext from '../contexts/AuthContext';
@@ -15,12 +16,23 @@ import SideMenu from './SideMenu';
 import Header from './Header';
 import PushUps from './PushUps';
 import Main from './Main';
+import blueGrey from '@material-ui/core/colors/blueGrey';
+import CircularProgress from "@material-ui/core/CircularProgress";
 
 const drawerWidth = 240;
+
+const theme = createMuiTheme({
+    palette: {
+        type: "dark",
+        primary: blueGrey,
+    }
+});
 
 const useStyles = makeStyles((theme) => ({
     root: {
         display: 'flex',
+        width: '100%',
+        maxWidth: 1980,
     },
     drawerHeader: {
         display: 'flex',
@@ -36,16 +48,22 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const App = () => {
-    const { user } = useContext(AuthContext);
+    const { user, loading } = useContext(AuthContext);
     const dbTestField = `/test/${user.uid}/foo`;
 
 
     const classes = useStyles();
     const [open, setOpen] = React.useState(false);
 
+    if(loading) {
+        return <div style={{display:'flex', alignItems: "center", justifyContent:'center', height: '100vh'}}>
+            <CircularProgress />
+        </div>;
+    }
 
     return (
             <Router>
+                <ThemeProvider theme={theme}>
                 <div className={classes.root}>
                 <CssBaseline />
                 <Header onToggleMenu={setOpen} isMenuOpen={open} title={"На спорте"} />
@@ -67,6 +85,7 @@ const App = () => {
                     </Switch>
                 </main>
             </div>
+                </ThemeProvider>
         </Router>
     );
 }

@@ -23,7 +23,8 @@ class AuthProvider extends Component {
         super(props);
 
         this.state = {
-            user: {}
+            user: {},
+            loading: true
         };
     }
 
@@ -32,10 +33,10 @@ class AuthProvider extends Component {
         firebase.auth().onAuthStateChanged(data => {
             if (data && data.uid) {
                 const udata = getUserObject(data);
-                this.setState({ user: udata });
+                this.setState({ user: udata, loading: false });
                 loginUserHandlerAsync(data.uid, udata).then(res => console.log('Userdata in db updated', res))
             } else {
-                this.setState({ user: {} })
+                this.setState({ user: {}, loading: false })
             }
         })
     }
@@ -86,13 +87,14 @@ class AuthProvider extends Component {
 
     render() {
         const { children } = this.props
-        const { user } = this.state
+        const { user, loading } = this.state
         const { setUser } = this
 
         return (
             <AuthContext.Provider
                 value={{
                     user,
+                    loading,
                     loginHandler: () => this.loginHandler(),
                     logoutHandler: () => this.logoutHandler()
                 }}

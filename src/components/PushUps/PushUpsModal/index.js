@@ -7,6 +7,7 @@ import LinearProgress from "@material-ui/core/LinearProgress";
 import StagesEnum from "./StagesEnum";
 import {speak} from "../../../helpers/speakHelper";
 import {plural} from "../../../helpers/pluralHelper";
+import {withTheme} from "@material-ui/styles";
 
 function addNode({x, y}, el) {
     const div = document.createElement('div');
@@ -72,11 +73,11 @@ class PushUpsModal extends React.Component {
     onClickStartHandler = (e) => {
         e.stopPropagation();
         if(this.blocked) {
-            this.ref.current.style.backgroundColor = 'red';
+            this.ref.current.style.filter = 'invert(1)';
             clearTimeout(this.blockedTimeout);
             this.blockedTimeout = setTimeout(()=>{
                 this.blocked = false;
-                this.ref.current.style.backgroundColor = '';
+                this.ref.current.style.filter = '';
             } , 1000);
 
             return;
@@ -128,7 +129,7 @@ class PushUpsModal extends React.Component {
 
         const setDown = count - doneCount;
         const setTarget = sets[setIndex];
-        
+
         if(count+1 === doneCount + sets[setIndex]){
             this.setState({
                 doneCount: count+1,
@@ -161,10 +162,15 @@ class PushUpsModal extends React.Component {
             onTouchStart={this.onClickStartHandler}
             onMouseUp={this.onClickEndHandler}
             onTouchEnd={this.onClickEndHandler}
+            onClick={e=>e.stopPropagation()}
             ref={this.ref}
+            style={{backgroundColor: this.props.theme.palette.background.paper}}
         >
             <header>
-                <Button className="doneBtn" color="primary" onClick={e=>{ e.stopPropagation(); this.props.onDone(this.state.data); }}>Завершить</Button>
+                <Button
+                    className="doneBtn"
+                    color="primary"
+                    onClick={e=>{ e.stopPropagation(); e.preventDefault(); this.state.count > 0 && this.props.onDone(this.state.data); }}>Завершить</Button>
             </header>
             <main>
                 {stage === StagesEnum.Started && <CountdownTimer
@@ -212,4 +218,4 @@ PushUpsModal.propTypes = {
 
 };
 
-export default PushUpsModal;
+export default withTheme(PushUpsModal);

@@ -12,7 +12,7 @@ import { getUsersListAsync } from '../../services/userService';
 const useStyles = makeStyles((theme) => ({
     root: {
         width: '100%',
-        maxWidth: '36ch',
+        maxWidth: '1024',
         backgroundColor: theme.palette.background.paper,
     },
     inline: {
