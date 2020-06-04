@@ -36,8 +36,7 @@ const useStyles = makeStyles((theme) => ({
 
 const PushUps = (props) => {
     const [isShowModal, setShowModal] = useState(false);
-    const [startTime, setStartTime] = useState(null);
-    const [myPushups, setMyPushups] = useState(null);
+    const [myPushups, setMyPushups] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
 const classes = useStyles();
@@ -48,6 +47,10 @@ const classes = useStyles();
             const ref = `/users/${user.uid}/pushups/`
             dbReadSorted(ref, 'startTime').then(res => {
                 const keyValues = res.val();
+                if (!keyValues){
+                    setLoading(false);
+                    return;
+                }
                 const result = new Array(Object.keys(keyValues).length);
                 let cou = 0;
                 Object.entries(keyValues).forEach(([key, val], i) => {
@@ -82,18 +85,12 @@ const classes = useStyles();
         <Divider variant="fullWidth" />
 
         <Fab className={classes.fab} variant="extended" color="primary" onClick={()=>{
-            setStartTime(Date.now());
             setShowModal(true)
         }}>
             <AddIcon />
             Начать
         </Fab>
-        {isShowModal && <PushUpsModal onDone={(data)=>{
-            const pushupRef = '/pushups/';
-            const pushupsUpdates = {};
-            const endTime = Date.now();
-            data.forEach(x => pushupsUpdates[pushupRef + dbGetNewKey(pushupRef)] = { ...x, uid: user.uid, startTime, endTime });
-            dbUpdate(pushupsUpdates);
+        {isShowModal && <PushUpsModal onDone={({ steps, pauses, startTime, endTime })=>{
 
             const userPushupsRef = `/users/${user.uid}/pushups/`;
             const key = dbGetNewKey(userPushupsRef);
@@ -101,27 +98,38 @@ const classes = useStyles();
             userPushupsPatch[userPushupsRef + key] = {
                 startTime,
                 endTime,
-                steps: data
+                steps,
+                pauses
             }
 
-
             dbUpdate(userPushupsPatch);
+
+            const pushupRef = '/pushups/';
+            const pushupsUpdates = {
+                [pushupRef + dbGetNewKey(pushupRef)]: {
+                    uid: user.uid,
+                    count: steps.length,
+                    startTime,
+                    endTime,
+                    pausesDuration: pauses.reduce((acc, { end, start }) => acc + (end - start), 0)
+                }
+            };
+            dbUpdate(pushupsUpdates);
 
             const uplist = [{
                 id: key,
                 startTime,
                 endTime,
-                steps: data
+                steps
             }].concat(myPushups)
             setMyPushups(uplist)
 
-            const userTotPushupsRef = `/users/${user.uid}/`;
-            const userTotPushupsPatch = {};
-            userPushupsPatch[userTotPushupsRef] = {
-                pushupsCount: totalCount + data.length
-            }
+            const userTotPushupsRef = `/users/${user.uid}/pushupsCount`;
+            const userTotPushupsPatch = {
+                [userTotPushupsRef]: totalCount + steps.length
+            };
 
-            setTotalCount(totalCount + data.length);
+            setTotalCount(totalCount + steps.length);
 
 
             dbUpdate(userTotPushupsPatch);

@@ -8,6 +8,7 @@ import StagesEnum from "./StagesEnum";
 import {speak} from "../../../helpers/speakHelper";
 import {plural} from "../../../helpers/pluralHelper";
 import {withTheme} from "@material-ui/styles";
+import Typography from "@material-ui/core/Typography";
 
 function addNode({x, y}, el) {
     const div = document.createElement('div');
@@ -23,7 +24,7 @@ function addNode({x, y}, el) {
 const program = [
     {
         pause: 10,
-        sets: [5,6,7,5]
+        sets: [1,2,2,1]
     },
     {
         pause: 20,
@@ -57,6 +58,9 @@ class PushUpsModal extends React.Component {
 
         this.state = {
             data: [],
+            pauses: [],
+            startTime: 0,
+            endTime: 0,
             count: 0,
             doneCount: 0,
             setIndex: 0,
@@ -73,11 +77,11 @@ class PushUpsModal extends React.Component {
     onClickStartHandler = (e) => {
         e.stopPropagation();
         if(this.blocked) {
-            this.ref.current.style.filter = 'invert(1)';
+            this.ref.current.style.backgroundColor = this.props.theme.palette.error.dark;
             clearTimeout(this.blockedTimeout);
             this.blockedTimeout = setTimeout(()=>{
                 this.blocked = false;
-                this.ref.current.style.filter = '';
+                this.ref.current.style.backgroundColor = this.props.theme.palette.background.default;
             } , 1000);
 
             return;
@@ -91,8 +95,13 @@ class PushUpsModal extends React.Component {
 
     onClickEndHandler = (e) => {
         e.stopPropagation();
-        if (this.blocked || this.state.stage != StagesEnum.InProgress) {
+
+        if (this.blocked) {
             speak('эээ');
+            return;
+        }
+
+        if(this.state.stage != StagesEnum.InProgress && !(this.props.canAbortPause && this.state.stage === StagesEnum.Paused)) {
             return;
         }
 
@@ -111,13 +120,25 @@ class PushUpsModal extends React.Component {
 
         this.blocked = true;
 
+        const optPatch = {};
+
+        if(this.props.canAbortPause && this.state.stage === StagesEnum.Paused) {
+            Object.assign(optPatch, {
+                stage: StagesEnum.InProgress,
+                pauses: [...this.state.pauses, {
+                    start: this.state.pauseStart,
+                    end: Date.now()
+                }],
+            });
+        }
+
         this.setState({
             data,
-            count: count + 1
+            count: count + 1,
+            ...optPatch
         }, () => {
-            addNode({x,y},ref.current);
+            this.props.showPoints && addNode({x,y},ref.current);
             this.blockedTimeout = setTimeout(()=> this.blocked = false, 1000);
-
         });
         this.onClickComputes();
 
@@ -130,11 +151,14 @@ class PushUpsModal extends React.Component {
         const setDown = count - doneCount;
         const setTarget = sets[setIndex];
 
+
+
         if(count+1 === doneCount + sets[setIndex]){
             this.setState({
                 doneCount: count+1,
                 setIndex: setIndex + 1,
-                stage: count+1 === this.targetCount? StagesEnum.Done : StagesEnum.Paused
+                endTime: count+1 === this.targetCount ? Date.now() : 0,
+                stage: count+1 === this.targetCount ? StagesEnum.Done : StagesEnum.Paused
             }, () => {
                 count+1 === this.targetCount ? speak('Завершено') : speak('Сделано. Отдыхаем');
             });
@@ -164,24 +188,50 @@ class PushUpsModal extends React.Component {
             onTouchEnd={this.onClickEndHandler}
             onClick={e=>e.stopPropagation()}
             ref={this.ref}
-            style={{backgroundColor: this.props.theme.palette.background.paper}}
+            style={{backgroundColor: this.props.theme.palette.background.default}}
         >
             <header>
                 <Button
                     className="doneBtn"
                     color="primary"
-                    onClick={e=>{ e.stopPropagation(); e.preventDefault(); this.state.count > 0 && this.props.onDone(this.state.data); }}>Завершить</Button>
+                    onClick={e=>{
+                        e.stopPropagation();
+                        e.preventDefault();
+                        this.state.count > 0 && this.props.onDone({
+                            steps: this.state.data,
+                            pauses: this.state.pauses,
+                            startTime: this.state.startTime,
+                            endTime: this.state.endTime
+                        });
+                    }}>Завершить</Button>
             </header>
             <main>
                 {stage === StagesEnum.Started && <CountdownTimer
                     max={5}
-                    done={()=>{ this.setStage(StagesEnum.InProgress); }}
+                    done={()=>{ this.setState({
+                        stage: StagesEnum.InProgress,
+                        startTime: Date.now()
+                    }); }}
+                    caption="приготовьтесь"
                 />}
-                {stage === StagesEnum.InProgress && <h1>{count}</h1>}
+                {stage === StagesEnum.InProgress && <Typography variant="h1" color="textPrimary">
+                    {count}
+                </Typography>}
                 {stage === StagesEnum.Paused && <CountdownTimer
                     max={pause}
-                    done={()=>{this.setStage(StagesEnum.InProgress);}} />}
-                {stage === StagesEnum.Done && <div>Готово! Нажмите завершить для сохранения упражнения.</div>}
+                    done={()=>{
+                        this.setState({
+                            pauses: [...this.state.pauses, {
+                                start: this.state.pauseStart,
+                                end: Date.now()
+                            }],
+                            stage: StagesEnum.InProgress
+                        });
+                    }}
+                    beforeStart={()=> this.setState({ pauseStart: Date.now()})}
+                />}
+                {stage === StagesEnum.Done && <Typography variant="subtitle1" color="textPrimary">
+                    Готово! Нажмите завершить для сохранения упражнения.</Typography>}
             </main>
             <footer className="progress">
                 <LinearProgress variant="determinate" value={(count / this.targetCount) * 100} />
@@ -211,11 +261,12 @@ class PushUpsModal extends React.Component {
 
 PushUpsModal.defaultProps = {
     sets: program[0].sets,
-    pause: program[0].pause
+    pause: program[0].pause,
+    canAbortPause: true,
+    showPoints: true
 }
 
 PushUpsModal.propTypes = {
-
 };
 
 export default withTheme(PushUpsModal);

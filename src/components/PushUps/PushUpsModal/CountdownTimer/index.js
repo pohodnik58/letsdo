@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import {beep, beep2} from "../../../../helpers/beepHelper";
+import Typography from "@material-ui/core/Typography";
 
 class CountdownTimer extends React.Component {
     constructor(props) {
@@ -14,6 +15,7 @@ class CountdownTimer extends React.Component {
 
     componentDidMount = () => {
         const {props} = this;
+        this.props.beforeStart && this.props.beforeStart();
 
         this.to = setInterval(() => {
             const { current } = this.state;
@@ -42,12 +44,16 @@ class CountdownTimer extends React.Component {
 
 
     render() {
-        return <h3>{this.state.current}</h3>
+        return <div style={{textAlign: 'center'}}>
+            <Typography variant="h2" color="textSecondary" align="center">{this.state.current}</Typography>
+            <Typography variant="caption" color="textSecondary" align="center">{this.props.caption}</Typography>
+        </div>
     }
 };
 
 CountdownTimer.defaultProps = {
-    min: 0
+    min: 0,
+    caption: 'пауза'
 };
 
 CountdownTimer.propTypes = {
@@ -56,6 +62,7 @@ CountdownTimer.propTypes = {
     done: PropTypes.func.isRequired,
     beforeStart: PropTypes.func,
     beforeDone: PropTypes.func,
+    onClick: PropTypes.func,
 };
 
 export default CountdownTimer;

@@ -8,6 +8,10 @@ import ListItemAvatar from '@material-ui/core/ListItemAvatar';
 import Avatar from '@material-ui/core/Avatar';
 import CircularProgress from '@material-ui/core/CircularProgress';
 import { getUsersListAsync } from '../../services/userService';
+import ListItemSecondaryAction from "@material-ui/core/ListItemSecondaryAction";
+import IconButton from '@material-ui/core/IconButton';
+import FitnessCenter from '@material-ui/icons/FitnessCenter';
+import Badge from "@material-ui/core/Badge";
 
 const useStyles = makeStyles((theme) => ({
     root: {
@@ -51,6 +55,13 @@ export default function UsersList() {
                             primary={x.displayName}
                             secondary={x.email}
                         />
+                        <ListItemSecondaryAction>
+                            <IconButton edge="end" aria-label="comments">
+                                <Badge badgeContent={x.pushupsCount || 0} color="primary">
+                                    <FitnessCenter />
+                                </Badge>
+                            </IconButton>
+                        </ListItemSecondaryAction>
                     </ListItem>
                     <Divider />
                 </React.Fragment>)
