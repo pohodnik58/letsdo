@@ -31,6 +31,9 @@ const useStyles = makeStyles((theme) => ({
         width: theme.spacing(9),
         height: theme.spacing(9),
     },
+    nested: {
+        paddingLeft: theme.spacing(4),
+    },
 }));
 
 const SideMenu = (props) => {
@@ -42,6 +45,7 @@ const SideMenu = (props) => {
         className={classes.drawer}
         anchor="left"
         onClose={()=>props.onChangeOpen(false)}
+        onOpen={()=>props.onChangeOpen(true)}
         open={props.open}
         classes={{
             paper: classes.drawerPaper,

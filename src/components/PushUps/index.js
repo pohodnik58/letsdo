@@ -14,6 +14,8 @@ import {makeStyles} from "@material-ui/core/styles";
 import Typography from "@material-ui/core/Typography";
 import Divider from "@material-ui/core/Divider";
 import CircularProgress from "@material-ui/core/CircularProgress";
+import Dialog from "@material-ui/core/Dialog";
+import {programTraining} from "./programTraining";
 
 
 const today = new Date().toLocaleDateString();
@@ -39,6 +41,9 @@ const PushUps = (props) => {
     const [myPushups, setMyPushups] = useState([]);
     const [totalCount, setTotalCount] = useState(0);
     const [loading, setLoading] = useState(true);
+    const [currentProgramStep, setCurrentProgramStep] = useState(0);
+
+
 const classes = useStyles();
 
     const { user } = useContext(AuthContext);
@@ -62,9 +67,19 @@ const classes = useStyles();
                 });
 
                 setTotalCount(cou);
-                setMyPushups(result.reverse())
-                setLoading(false);
+                setMyPushups(result.reverse());
+                const userTotPushupsRef = `/users/${user.uid}/pushupsCurrentProgramStep`;
+
+                dbRead(userTotPushupsRef).then(res => {
+                    const lastProgramStep = res.val();
+                    setCurrentProgramStep(lastProgramStep || 0);
+
+                    setLoading(false);
+                });
             });
+
+
+
         }
         user.uid && fetchData();
     }, [user.uid]);
@@ -72,6 +87,59 @@ const classes = useStyles();
     if(loading) {
         return <CircularProgress />;
     }
+
+    const onSavePushups = ({ steps, pauses, startTime, endTime })=>{
+
+        const userPushupsRef = `/users/${user.uid}/pushups/`;
+        const key = dbGetNewKey(userPushupsRef);
+        const userPushupsPatch = {};
+        userPushupsPatch[userPushupsRef + key] = {
+            startTime,
+            endTime,
+            steps,
+            pauses
+        }
+
+        dbUpdate(userPushupsPatch);
+
+        const pushupRef = '/pushups/';
+        const pushupsUpdates = {
+            [pushupRef + dbGetNewKey(pushupRef)]: {
+                uid: user.uid,
+                count: steps.length,
+                startTime,
+                endTime,
+                pausesDuration: pauses.reduce((acc, { end, start }) => acc + (end - start), 0)
+            }
+        };
+        dbUpdate(pushupsUpdates);
+
+        const uplist = [{
+            id: key,
+            startTime,
+            endTime,
+            steps
+        }].concat(myPushups)
+        setMyPushups(uplist)
+
+        const userTotPushupsRef = `/users/${user.uid}/pushupsCount`;
+        const userPushupsCurrentProgramStepRef = `/users/${user.uid}/pushupsCurrentProgramStep`;
+        const userTotPushupsPatch = {
+            [userTotPushupsRef]: totalCount + steps.length,
+            [userPushupsCurrentProgramStepRef]: currentProgramStep + 1
+        };
+
+        setTotalCount(totalCount + steps.length);
+        setCurrentProgramStep(currentProgramStep + 1);
+
+
+        dbUpdate(userTotPushupsPatch);
+
+
+        setShowModal(false);
+    }
+
+    const programItem = programTraining.steps[currentProgramStep];
 
     return <section className={classes.root}>
         <Typography variant="h4">
@@ -88,55 +156,16 @@ const classes = useStyles();
             setShowModal(true)
         }}>
             <AddIcon />
-            Начать
+            Начать (шаг {currentProgramStep + 1})
         </Fab>
-        {isShowModal && <PushUpsModal onDone={({ steps, pauses, startTime, endTime })=>{
 
-            const userPushupsRef = `/users/${user.uid}/pushups/`;
-            const key = dbGetNewKey(userPushupsRef);
-            const userPushupsPatch = {};
-            userPushupsPatch[userPushupsRef + key] = {
-                startTime,
-                endTime,
-                steps,
-                pauses
-            }
-
-            dbUpdate(userPushupsPatch);
-
-            const pushupRef = '/pushups/';
-            const pushupsUpdates = {
-                [pushupRef + dbGetNewKey(pushupRef)]: {
-                    uid: user.uid,
-                    count: steps.length,
-                    startTime,
-                    endTime,
-                    pausesDuration: pauses.reduce((acc, { end, start }) => acc + (end - start), 0)
-                }
-            };
-            dbUpdate(pushupsUpdates);
-
-            const uplist = [{
-                id: key,
-                startTime,
-                endTime,
-                steps
-            }].concat(myPushups)
-            setMyPushups(uplist)
-
-            const userTotPushupsRef = `/users/${user.uid}/pushupsCount`;
-            const userTotPushupsPatch = {
-                [userTotPushupsRef]: totalCount + steps.length
-            };
-
-            setTotalCount(totalCount + steps.length);
-
-
-            dbUpdate(userTotPushupsPatch);
-
-
-            setShowModal(false);
-        }}/>}
+        {isShowModal && <Dialog fullScreen open={true} onClose={()=>setShowModal(false)}>
+           <PushUpsModal
+               onDone={onSavePushups}
+               sets={programItem.approach}
+               pause={programItem.pause || 20}
+           />
+        </Dialog>}
 
         <List>
                 {

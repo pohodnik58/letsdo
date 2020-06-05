@@ -9,12 +9,16 @@ import {speak} from "../../../helpers/speakHelper";
 import {plural} from "../../../helpers/pluralHelper";
 import {withTheme} from "@material-ui/styles";
 import Typography from "@material-ui/core/Typography";
+import {playMp3} from "../../../helpers/mp3Helper";
+import feilSound from '../sounds/tup.mp3';
+import pip from '../sounds/pip.mp3';
 
-function addNode({x, y}, el) {
+function addNode({x, y}, el, bg = '#fff') {
     const div = document.createElement('div');
     div.setAttribute('class','redpoint');
-    div.style.left = x + 'px'
-    div.style.top = y + 'px'
+    div.style.left = x + 'px';
+    div.style.top = y + 'px';
+    div.style.backgroundColor = bg;
     el.appendChild(div)
 }
 
@@ -74,6 +78,11 @@ class PushUpsModal extends React.Component {
         this.blockedTimeout = null;
     }
 
+    componentDidMount = () => {
+        document.title = "Отжимания"
+
+    }
+
     onClickStartHandler = (e) => {
         e.stopPropagation();
         if(this.blocked) {
@@ -81,11 +90,12 @@ class PushUpsModal extends React.Component {
             clearTimeout(this.blockedTimeout);
             this.blockedTimeout = setTimeout(()=>{
                 this.blocked = false;
-                this.ref.current.style.backgroundColor = this.props.theme.palette.background.default;
+                this.ref.current.style.backgroundColor = "";
             } , 1000);
 
             return;
         }
+
 
         const x = e.clientX || e.touches[0].clientX;
         const y = e.clientY || e.touches[0].clientY;
@@ -94,10 +104,11 @@ class PushUpsModal extends React.Component {
     }
 
     onClickEndHandler = (e) => {
+
         e.stopPropagation();
 
         if (this.blocked) {
-            speak('эээ');
+            playMp3(feilSound);
             return;
         }
 
@@ -137,7 +148,7 @@ class PushUpsModal extends React.Component {
             count: count + 1,
             ...optPatch
         }, () => {
-            this.props.showPoints && addNode({x,y},ref.current);
+            this.props.showPoints && addNode({x,y},ref.current, this.props.theme.palette.action.selected);
             this.blockedTimeout = setTimeout(()=> this.blocked = false, 1000);
         });
         this.onClickComputes();
@@ -160,16 +171,12 @@ class PushUpsModal extends React.Component {
                 endTime: count+1 === this.targetCount ? Date.now() : 0,
                 stage: count+1 === this.targetCount ? StagesEnum.Done : StagesEnum.Paused
             }, () => {
-                count+1 === this.targetCount ? speak('Завершено') : speak('Сделано. Отдыхаем');
+                count+1 === this.targetCount ? speak('Завершено'): speak('Сделано. Отдыхаем');
             });
         } else {
             speak((setTarget - setDown) - 1);
         }
 
-    }
-
-    setStage = stage => {
-        this.setState({stage});
     }
 
     render() {
@@ -188,7 +195,6 @@ class PushUpsModal extends React.Component {
             onTouchEnd={this.onClickEndHandler}
             onClick={e=>e.stopPropagation()}
             ref={this.ref}
-            style={{backgroundColor: this.props.theme.palette.background.default}}
         >
             <header>
                 <Button
@@ -230,8 +236,10 @@ class PushUpsModal extends React.Component {
                     }}
                     beforeStart={()=> this.setState({ pauseStart: Date.now()})}
                 />}
-                {stage === StagesEnum.Done && <Typography variant="subtitle1" color="textPrimary">
-                    Готово! Нажмите завершить для сохранения упражнения.</Typography>}
+                {stage === StagesEnum.Done && <Typography variant="subtitle1" align="center" color="textPrimary">
+                    <Typography variant="h4" align="center" color="textPrimary">Готово!</Typography>
+                    Нажмите завершить<br />для сохранения упражнения.
+                </Typography>}
             </main>
             <footer className="progress">
                 <LinearProgress variant="determinate" value={(count / this.targetCount) * 100} />
