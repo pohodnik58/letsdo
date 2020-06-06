@@ -5,6 +5,7 @@ import Typography from "@material-ui/core/Typography";
 import video from "../run.mp4";
 import {playMp3} from "../../../../helpers/mp3Helper";
 import timerDone from '../../sounds/plink.mp3'
+import pip from '../../sounds/pip.mp3'
 
 class CountdownTimer extends React.Component {
     constructor(props) {
@@ -24,12 +25,13 @@ class CountdownTimer extends React.Component {
         this.to = setInterval(() => {
             const { current } = this.state;
             if (current <= 0) {
-                playMp3(timerDone).then(()=>props.done && props.done())
+                playMp3(pip).then(()=>props.done && props.done())
 
                 return null;
             } else {
                 if( current < 4) {
-                    beep();
+                    playMp3(timerDone)
+
                 };
 
                 if( current === 1) {

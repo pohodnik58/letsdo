@@ -134,6 +134,8 @@ class PushUpsModal extends React.Component {
         const optPatch = {};
 
         if(this.props.canAbortPause && this.state.stage === StagesEnum.Paused) {
+            playMp3(pip);
+            speak('Пауза прервана.');
             Object.assign(optPatch, {
                 stage: StagesEnum.InProgress,
                 pauses: [...this.state.pauses, {
@@ -171,10 +173,10 @@ class PushUpsModal extends React.Component {
                 endTime: count+1 === this.targetCount ? Date.now() : 0,
                 stage: count+1 === this.targetCount ? StagesEnum.Done : StagesEnum.Paused
             }, () => {
-                count+1 === this.targetCount ? speak('Завершено'): speak('Сделано. Отдыхаем');
+                count+1 === this.targetCount ? speak('Завершено. Не забудь сохранить тренировку нажав кнопку завершить'): speak('Сделано. Отдыхаем');
             });
         } else {
-            speak((setTarget - setDown) - 1);
+            speak(`${(setTarget - setDown) - 1}`);
         }
 
     }
@@ -183,7 +185,7 @@ class PushUpsModal extends React.Component {
         const { stage, count, data, setIndex, doneCount } = this.state;
         const { sets, pause, onDone } = this.props;
 
-        if((doneCount === 0 || count - doneCount === 0) && stage === StagesEnum.InProgress) {
+        if((count - doneCount === 0) && stage === StagesEnum.InProgress) {
             speak('Делаем ' + sets[setIndex] + ' ' + plural(['отжимание', 'отжимания', 'отжиманий'], sets[setIndex] ));
         }
 
